@@ -1,6 +1,10 @@
+import geomerative.*;
+import org.apache.batik.svggen.font.table.*;
+import org.apache.batik.svggen.font.*;
 import processing.net.*; 
 import http.requests.*;
 import processing.serial.*; 
+
 
 //////////////////////////////
 boolean beginSequence = false;
@@ -11,51 +15,112 @@ Serial myPort;    // The serial port
 String inString;  // Input string from serial port
 int lf = 10;      // ASCII linefeed
 
-PFont font;
-
+//PFont font;
 String[] finalyText = {" "," " } ;
 
 String header=" ";
 String boddy= " ";
 
 PImage border; 
+
+  RFont headerFont;
+  RFont bodyFont;
+
+
+
+int fontSize = 350; 
+
+
 void setup() { 
   
-  size(800,604);
+  size(1100,850);
+  RG.init(this);
+  //font = new RFont("OldLondon.ttf", fontSize, RFont.CENTER); 
+  headerFont = new RFont("BigCaslon.ttf", fontSize, RFont.CENTER);
+  bodyFont = new RFont("BigCaslon.ttf", fontSize, RFont.CENTER);
+
+  //RCommand.setSegmentLength(1000);
+
   
   //String[] fontlist = PFont.list();
   //println(fontlist);
   //hint(ENABLE_NATIVE_FONTS);
-  font = createFont("BigCaslon-Medium", 28);
-  textFont(font);
-  
+  //font = createFont("BigCaslon-Medium", 28);
+  //textFont(font);
 
-  fill(0);
+
+
   border = loadImage("cert.png");
   myPort = new Serial(this, Serial.list()[6], 9600); 
-  
   myPort.bufferUntil(lf); 
 
 } 
 
 
+String headerFirstLine;
+String headerSecondLine;
+
 
 void draw() { 
   background(255);
-  image(border,0,0);
+  image(border,0,0,width,height);
   header = finalyText[0];
   boddy = finalyText[1];
 
-  // Change the background if the mouse is pressed
-//  if (mousePressed) {
-//    background(255);
-//    
-////    header = text(finalyText[0], width/2, height/2, width, height);
-////    boddy = text(finalyText[1], width/2, (height/2) +50 , width, height);    
-//  } 
   
-    text(header, width/6, height/6, width-250, height-250);
-    text(boddy, width/6, (height/6) +150 , width-250, height-250);
+  strokeWeight(1);
+  
+  int headerLength = header.length();
+  int maxHeaderCount = 30;
+  int lineSpacing = 40;
+  
+    translate(width/2,height/2);
+
+  headerFont.setSize(35);
+  fill(0);
+  //stroke(0,0);
+  
+  if(headerLength > maxHeaderCount){
+    
+  
+    //where we split the header into two lines
+    int splitIndex = 0;
+    
+    boolean foundColon = false;
+    for(int i=headerLength-1; i>0; i--){
+       if(header.charAt(i) == ':'){
+         foundColon = true;
+         splitIndex = i+1;
+         break;
+       }
+    }
+
+    //find a nearby whitespace  
+    if(!foundColon){
+      for(int i=maxHeaderCount; i>0; i--){
+        if(header.charAt(i) == ' '){
+          splitIndex = i;
+          break;
+        }
+      }
+    }
+      
+    println("splitIndex: " + splitIndex); //debug only
+    
+    headerFirstLine = header.substring(0,splitIndex);
+    headerSecondLine = header.substring(splitIndex, headerLength);
+    headerFont.draw(headerFirstLine);
+    translate(0,lineSpacing);
+    headerFont.draw(headerSecondLine);
+
+ 
+  }else{
+  
+  headerFont.draw(header);
+  }
+  
+   // text(header, width/6, height/6, width-250, height-250);
+   // text(boddy, width/6, (height/6) +150 , width-250, height-250);
     
 ////////////////////////////////////////////    
     if(beginSequence){
@@ -111,14 +176,6 @@ void serialEvent(Serial p) {
  }
 }
 
-//void keyPressed() { //to add: button press!
-//  
-//  if (key == 's') {
-//      saveOutput();
-//      
-//  }
-//  
-//}
 
 void saveOutput(){
   //saveFrame(adjective + "-" + n + "-" + problem + "-" + audience + ".png");
@@ -132,7 +189,6 @@ void printOutput(){
        //exec(cmd);
        beginSequence = false;
        firstRun = true;
-
 }
 
 
